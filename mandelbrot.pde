@@ -9,7 +9,7 @@ Complex max = new Complex(2, 2);  //Maximum values that are shown on screen
 Complex res = new Complex(0.01, 0.01); //Resolution
 Complex range = new Complex(); // Value range on screen
 
-Complex c = new Complex (0, 0);//Parameter used to iterate through julia sets
+Complex c = new Complex (-0.6, 0.6);//Parameter used to iterate through julia sets
 Complex c_res = new Complex (0.01, 0.01); //Increment value
 Complex c_max = new Complex (1, 1); //Maximum value for parameter c
 Complex c_min = new Complex (-1, -1); //Maximum value for parameter c
@@ -18,10 +18,10 @@ boolean dirImag = true;
 
 //If the result of the recursive function exceeds this value, 
 //it is considered to be not part of the set.
-int mag_threshold=2; 
+double mag_threshold=0.1; 
 
 //How many iterations of the recursive functions are done at max.
-int max_iterations=20;
+int max_iterations=100;
 
 double zoom_factor=1;//At beginng soom factor of one is assumed
 PVector dragOrigin = new PVector (0, 0);//Mouse position when clicked
@@ -31,8 +31,7 @@ Complex dragMovement = new Complex(0, 0);//Difference during mouse dragging
 PFont cmu;
 
 void setup () {
-  size(1200, 1200, P3D);
-  frameRate(1);
+  size(480, 480);
   noSmooth();// No antialiasing
 
   cmu = createFont("cmu.ttf", 48);
@@ -58,7 +57,8 @@ void draw () {
     min = dragMinimum.add(dragMovement);
     max = min.add(range);
   }
-  if (dirReal) {
+  //Sweep through all parameters
+ /* if (dirReal) {
     if (c.real<c_max.real) {
       c = new Complex(c.real+c_res.real, c.imag);
     } else {
@@ -83,7 +83,7 @@ void draw () {
     } else {
       dirReal=!dirReal;
     }
-  }
+  }*/
   text(nf((float)c.real,0,2)+"+"+nf((float)c.imag,0,2)+"i", 12, 60);
 }
 
@@ -95,12 +95,14 @@ float find_limit (Complex z, Complex c) {
     z = z.mult(z); // z -> z^2
     z = z.add(c); // z -> z + c
     iterations++;
-    if (z.mag() >= mag_threshold) {
-      return -1;//no limit exists (divergence)
+    if (z.mag() <= mag_threshold) {
+      //return -1;//no limit exists (divergence)
+      return iterations;
     }
   }
   //if there is convergence and a limit exists, return the magnitude of the limit (approx.).
-  return (float)z.mag();
+  //return (float)z.mag();
+  return -1;
 }
 
 // GRAPHICS
@@ -109,8 +111,8 @@ void paintNumber (Complex c, float mag) {
   int y=round(map((float)c.imag, (float)min.imag, (float)max.imag, 0.0, (float)height));
   colorMode(RGB);
   if (mag!=-1) {//paint only numbers that converge
-    colorMode(HSB, 1.2);//map the color scheme to a magnitude from 0 to 1.2
-    color clr = color(mag, 1.2, 1.2);
+    colorMode(HSB, 50);//map the color scheme to a magnitude from 0 to 1.2
+    color clr = color(mag, 50, 50);
     set(x, y, clr);//draw pixel
   }
 }
