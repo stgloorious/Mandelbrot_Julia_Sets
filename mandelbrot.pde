@@ -1,118 +1,100 @@
-/* Draws a mandelbrot set.
+/* Draws a mandelbrot set and allows for some mouse control
  *
  */
 
-import org.qscript.*;
-double min_real=-2.5;
-double max_real=1.5;
-double real_range = max_real-min_real;
-double res_real=0.01;
+import org.qscript.*; //Includes Complex class
 
-double min_im=-1;
-double max_im=1;
-double im_range=max_im-min_im;
-double res_im=0.01;
+Complex min = new Complex(-2.5,-1);  //Minimum values that are shown on screen 
+Complex max = new Complex(1.5,1);  //Maximum values that are shown on screen
+Complex res = new Complex(0.01,0.01); //Resolution
+Complex range = new Complex(); // Value range on screen
 
-int mag_threshold=3;
-int max_iterations=1;
+//If the result of the recursive function exceeds this value, 
+//it is considered to be not part of the set.
+int mag_threshold=10; 
 
-double zoom_factor=1;
+//How many iterations of the recursive functions are done at max.
+int max_iterations=20;
 
-float xDragOrigin=0;
-float yDragOrigin=0;
-boolean oldMousePressed=false;
-double real_min_dragging=0;
-double im_min_dragging=0;
-
-float real_movement=0;
-float im_movement=0;
+double zoom_factor=1;//At beginng soom factor of one is assumed
+PVector dragOrigin = new PVector (0,0);//Mouse position when clicked
+Complex dragMinimum = new Complex(0,0);//Minimum values before mouse was pressed
+Complex dragMovement = new Complex(0,0);//Difference during mouse dragging
 
 void setup () {
-  size(480, 240);
-  noSmooth();
-  colorMode(RGB, 255);
-  background(0);
+  size(1920, 960, P3D);
+  noSmooth();// No antialiasing
 }
 
 void draw () {
-  background(0);
-  res_im=(max_im-min_im)/width/2;
-  res_real=(max_real-min_real)/height/2;
+  background(0);//black
+  //Resolution is dependant on the visible range 
+  res= new Complex((max.imag-min.imag)/width,(max.real-min.real)/height/2);
+  
+  //Iterate through all complex numbers given the finite resolution
   double real, imaginary;
-  for (real=min_real; real<=max_real; real+=res_real) {
-    for (imaginary=min_im; imaginary<=max_im; imaginary+=res_im) {
+  for (real=min.real; real<=max.real; real+=res.real) {
+    for (imaginary=min.imag; imaginary<=max.imag; imaginary+=res.imag) {
       Complex c = new Complex(real, imaginary);
-      //print("Calculating... [");
-      //println(map((float)real, min_real, max_real, 0, 100), "%]");
-      paintNumber(c, find_limit(c));
+      paintNumber(c, find_limit(c));//paint the pixel on the screen accordingly
     }
   }
-  real_range=max_real-min_real;
-  im_range=max_im-min_im;
-  if (mousePressed) {
-    real_movement=map((xDragOrigin-mouseX), 0, width, 0, (float)real_range);
-    im_movement=map((yDragOrigin-mouseY), 0, height, 0, (float)im_range);
-    min_real=real_min_dragging+real_movement;
-    min_im=im_min_dragging+im_movement;
-    max_real=min_real+real_range;
-    max_im=min_im+im_range;
-  }
-
-  if (max_iterations<20) {
-    max_iterations++;
+  range=max.sub(min);
+  if (mousePressed) {//if mouse is pressed, move the range
+    dragMovement=new Complex(map((dragOrigin.x-mouseX), 0, width, 0, (float)range.real),map((dragOrigin.y-mouseY), 0, height, 0, (float)range.imag));
+    min = dragMinimum.add(dragMovement);
+    max = min.add(range);
   }
 }
-void mousePressed() {
-  xDragOrigin=mouseX;
-  yDragOrigin=mouseY;
-  real_min_dragging=min_real;
-  im_min_dragging=min_im;
-}
 
-void mouseWheel(MouseEvent event) {
-  float e = event.getCount();
-  zoom_factor = e>0?1.1:0.9090909090909090909;
-
-  double old_real_range = max_real-min_real;
-  double old_im_range = max_im-min_im;
-
-  double real_midpoint = old_real_range/2 + min_real;
-  double im_midpoint = old_im_range/2 + min_im;
-
-  real_range = zoom_factor * real_range;
-  im_range = zoom_factor * im_range;
-
-
-  min_real=real_midpoint-real_range/2;
-  max_real=real_midpoint+real_range/2;
-
-  min_im=im_midpoint-im_range/2;
-  max_im=im_midpoint+im_range/2;
-
-  println(real_range);
-}
-
+// MATH
 float find_limit (Complex c) {
   int iterations=0;
-  Complex z = new Complex(0, 0);
-  while (iterations<=max_iterations) {
-    z = z.mult(z);
-    z = z.add(c);
+  Complex z = new Complex(0, 0);//starting with z=0
+  while (iterations<=max_iterations) {//allow a maximum number of iterations (recursion levels)
+    // FUNCTION THAT DETERMINES THE MANDELBROT SET:
+    z = z.mult(z); // z -> z^2
+    z = z.add(c); // z -> z + c
     iterations++;
     if (z.mag() >= mag_threshold) {
-      return -1;
+      return -1;//no limit exists (divergence)
     }
   }
+  //if there is convergence and a limit exists, return the magnitude of the limit (approx.).
   return (float)z.mag();
 }
 
+// GRAPHICS
 void paintNumber (Complex c, float mag) {
-  int x=round(map((float)c.real, (float)min_real, (float)max_real, 0.0, (float)width));
-  int y=round(map((float)c.imag, (float)min_im, (float)max_im, 0.0, (float)height));
+  int x=round(map((float)c.real, (float)min.real, (float)max.real, 0.0, (float)width));
+  int y=round(map((float)c.imag, (float)min.imag, (float)max.imag, 0.0, (float)height));
   colorMode(RGB);
-  if (mag!=-1) { 
-    colorMode(HSB, 1.2);
+  if (mag!=-1) {//paint only numbers that converge
+    colorMode(HSB, 1.2);//map the color scheme to a magnitude from 0 to 1.2
     color clr = color(mag, 1.2, 1.2);
-    set(x, y, clr);
+    set(x, y, clr);//draw pixel
   }
+}
+
+// MOUSE CONTROL
+//Translation
+void mousePressed() {
+  dragOrigin.x=mouseX;
+  dragOrigin.y=mouseY;
+  dragMinimum=min;
+}
+
+// Zoom
+void mouseWheel(MouseEvent event) {
+  float e = event.getCount();
+  zoom_factor = e>0?1.1:0.9090909090909090909;//one zoom step is a 10% magnification
+  max_iterations = e<0?max_iterations+1:max_iterations-1;//make the maximum iterations a function of the zoom level
+  Complex old_range = new Complex(max.sub(min));
+  //remember the midpoint, so the zoom origin is always the center
+  Complex midpoint = old_range.mult(0.5).add(min);
+  //apply zoom factor to old range
+  range = range.mult(zoom_factor);
+  //calculate end points
+  min=midpoint.sub(range.mult(0.5));
+  max=midpoint.add(range.mult(0.5));
 }
