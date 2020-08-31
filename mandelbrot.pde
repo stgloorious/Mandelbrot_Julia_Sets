@@ -4,8 +4,8 @@
 
 import org.qscript.*; //Includes Complex class
 
-Complex min = new Complex(-2.5,-1);  //Minimum values that are shown on screen 
-Complex max = new Complex(1.5,1);  //Maximum values that are shown on screen
+Complex min = new Complex(0,0);  //Minimum values that are shown on screen 
+Complex max = new Complex(3.44,1.44);  //Maximum values that are shown on screen
 Complex res = new Complex(0.01,0.01); //Resolution
 Complex range = new Complex(); // Value range on screen
 
@@ -22,14 +22,14 @@ Complex dragMinimum = new Complex(0,0);//Minimum values before mouse was pressed
 Complex dragMovement = new Complex(0,0);//Difference during mouse dragging
 
 void setup () {
-  size(1920, 960, P3D);
+  size(3440, 1440);
   noSmooth();// No antialiasing
 }
 
 void draw () {
   background(0);//black
   //Resolution is dependant on the visible range 
-  res= new Complex((max.imag-min.imag)/width,(max.real-min.real)/height/2);
+  res= new Complex((max.imag-min.imag)/width,(max.real-min.real)/height/4);
   
   //Iterate through all complex numbers given the finite resolution
   double real, imaginary;
@@ -44,6 +44,9 @@ void draw () {
     dragMovement=new Complex(map((dragOrigin.x-mouseX), 0, width, 0, (float)range.real),map((dragOrigin.y-mouseY), 0, height, 0, (float)range.imag));
     min = dragMinimum.add(dragMovement);
     max = min.add(range);
+  }
+  if (keyPressed){
+    saveFrame("wallpaper.png");
   }
 }
 
