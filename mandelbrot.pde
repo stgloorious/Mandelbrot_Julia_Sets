@@ -4,8 +4,8 @@
 
 import org.qscript.*; //Includes Complex class
 
-Complex min = new Complex(0,0);  //Minimum values that are shown on screen 
-Complex max = new Complex(3.44,1.44);  //Maximum values that are shown on screen
+Complex min = new Complex(-3,-1);  //Minimum values that are shown on screen 
+Complex max = new Complex(1,1);  //Maximum values that are shown on screen
 Complex res = new Complex(0.01,0.01); //Resolution
 Complex range = new Complex(); // Value range on screen
 
@@ -22,7 +22,7 @@ Complex dragMinimum = new Complex(0,0);//Minimum values before mouse was pressed
 Complex dragMovement = new Complex(0,0);//Difference during mouse dragging
 
 void setup () {
-  size(3440, 1440);
+  size(800, 400);
   noSmooth();// No antialiasing
 }
 
@@ -82,7 +82,7 @@ void paintNumber (Complex c, float mag) {
     color clr = color(mag, 1.2, 1.2);
     set(x, y, clr);//draw pixel*/
     //(Drawing style)
-    colorMode(HSB, 50);//map the color scheme to a magnitude from 0 to 1.2
+    colorMode(HSB, 50);//map the color scheme to the number of iterations from 0 to 50
     color clr = color(mag);
     set(x, y, clr);//draw pixel
   }
